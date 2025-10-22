@@ -4,7 +4,7 @@ from mathutils import Direction, Point
 from helpers.utils import NotImplemented
 
 #TODO: (Optional) Instead of Any, you can define a type for the parking state
-ParkingState = Any
+ParkingState = Tuple[Point]#  store the points of the cars
 
 # An action of the parking problem is a tuple containing an index 'i' and a direction 'd' where car 'i' should move in the direction 'd'.
 ParkingAction = Tuple[int, Direction]
@@ -21,27 +21,66 @@ class ParkingProblem(Problem[ParkingState, ParkingAction]):
     # This function should return the initial state
     def get_initial_state(self) -> ParkingState:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        return self.cars
     
     # This function should return True if the given state is a goal. Otherwise, it should return False.
     def is_goal(self, state: ParkingState) -> bool:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        # loop one all slots and check if the car is in this slot if not return False
+        for key,value in self.slots.items():
+            if state[value]!=key:
+                return False
+        return True    
     
     # This function returns a list of all the possible actions that can be applied to the given state
     def get_actions(self, state: ParkingState) -> List[ParkingAction]:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        actions=[]
+        # the 4 possible directions
+        directions=[
+            (Point(0,-1),"U"),#UP
+            (Point(0,1),"D"),#DOWN
+            (Point(1,0),"R"),#RIGHT
+            (Point(-1,0),"L"),#LIFT
+        ]
+        # loop on all cars in the state
+        for i,car in enumerate(state):
+            # try the possible 4 actions
+            for d in directions:
+                # get the new state if we take this action
+                new_state=car+d[0]
+                # check if it is possible state if it is not a wall and also not a car
+                if new_state in self.passages and new_state not in state:
+                    # add this action
+                    actions.append((i,d[1]))
+        return actions
+           
     
     # This function returns a new state which is the result of applying the given action to the given state
     def get_successor(self, state: ParkingState, action: ParkingAction) -> ParkingState:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
-    
+        # get the car index and the action
+        car_idx,car_action=action
+        # calculate the new state for this car
+        new_car_state=state[car_idx]+car_action.to_vector()
+        # check if it is a vaild action not a wall or a position of a acr
+        if new_car_state not in state and new_car_state in self.passages:
+            # convert state into list to update it cannot update tuple
+            new_state=list(state)
+            new_state[car_idx]=new_car_state
+            state=tuple(new_state)
+        return state    
+            
     # This function returns the cost of applying the given action to the given state
     def get_cost(self, state: ParkingState, action: ParkingAction) -> float:
         #TODO: ADD YOUR CODE HERE
-        NotImplemented()
+        car_idx,car_action=action
+        # get new state 
+        new_car_state=state[car_idx]+car_action.to_vector()
+        # if it is a vaild state return based on the rank
+        if new_car_state not in state and new_car_state in self.passages:
+            return 26-car_idx
+        return 0
     
      # Read a parking problem from text containing a grid of tiles
     @staticmethod
