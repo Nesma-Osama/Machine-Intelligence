@@ -14,8 +14,37 @@ import heapq
 # 2. None if there is no solution
 
 def BreadthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
+    ## need to increase the time limit
     #TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    frontier=deque()# it is a queue
+    explored=[]# it is a graph version so need explored
+    # check if the initail state is the goal return empty path
+    if problem.is_goal(initial_state):
+        return[]
+    frontier.append((initial_state,[]))# add the initial state and the path
+    while True:
+        # check if is no node return None
+        if len(frontier)==0:
+            return None
+        # get node , path from frontier
+        node,path=frontier.popleft()
+        # add it to explored to not check it again
+        explored.append(node)
+        # get all actions
+        actions=problem.get_actions(node)
+        for action in actions:
+            # get the successor
+            successor=problem.get_successor(node,action)
+            # check if it not explored before on in the frontier
+            if successor not in explored and all(successor !=s[0] for s in frontier):
+                if problem.is_goal(successor):
+                    return path+[action]
+                frontier.append((successor,path+[action]))
+            
+                
+                
+            
+        
 
 def DepthFirstSearch(problem: Problem[S, A], initial_state: S) -> Solution:
     #TODO: ADD YOUR CODE HERE
