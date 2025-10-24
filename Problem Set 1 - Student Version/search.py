@@ -109,8 +109,84 @@ def UniformCostSearch(problem: Problem[S, A], initial_state: S) -> Solution:
         
 def AStarSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction) -> Solution:
     #TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    frontier = [] # priority queue
+    explored = set() # to keep track of explored states
+    counter = 0 # to break ties in the priority queue by giving index to each entry
+    
+    initial_h = heuristic(problem, initial_state) # heuristic cost for the initial state
+
+    # push initial state to frontier: (f_cost, counter, state, path, g_cost)
+    # here f_cost = g_cost + h_cost; for initial state, g_cost = 0
+    heapq.heappush(frontier, (initial_h, counter, initial_state, [], 0))
+    counter += 1
+    
+    while frontier:
+        # pop the node with the lowest f_cost
+        f_cost, _, state, path, g_cost = heapq.heappop(frontier)
+        
+        # if the state has already been explored, skip it
+        if state in explored:
+            continue
+            
+        # if the state is a goal, return the path
+        if problem.is_goal(state):
+            return path
+
+        # mark the state as explored
+        explored.add(state)
+        
+        # for all possible actions from the current state
+        for action in problem.get_actions(state):
+            # get the successor state
+            successor = problem.get_successor(state, action)
+
+            # if the successor has been explored, we ignore it
+            # because if we calculated the f(A->B) then we don't care about f(B->A), it might be even worse
+            if successor not in explored:
+                action_cost = problem.get_cost(state, action) # get the cost of the current action
+                new_g_cost = g_cost + action_cost # total cost from start to successor = current path cost + this action's cost
+                new_h_cost = heuristic(problem, successor)
+                new_f_cost = new_g_cost + new_h_cost # f_cost = g_cost + h_cost
+                new_path = path + [action]
+                
+                heapq.heappush(frontier, (new_f_cost, counter, successor, new_path, new_g_cost))
+                counter += 1 # increment counter for tie-breaking
+    
+    return None
+    
 
 def BestFirstSearch(problem: Problem[S, A], initial_state: S, heuristic: HeuristicFunction) -> Solution:
     #TODO: ADD YOUR CODE HERE
-    NotImplemented()
+    # same as A* but f_cost = h_cost only
+    frontier = []
+    explored = set()
+    counter = 0
+    
+    initial_h = heuristic(problem, initial_state)
+    # push initial state to frontier: (f_cost, counter, state, path)
+    heapq.heappush(frontier, (initial_h, counter, initial_state, []))
+    counter += 1
+    
+    while frontier:
+        f_cost, _, state, path = heapq.heappop(frontier)
+        
+        if state in explored:
+            continue
+            
+        if problem.is_goal(state):
+            return path
+            
+        explored.add(state)
+        
+        for action in problem.get_actions(state):
+            successor = problem.get_successor(state, action)
+            
+            if successor not in explored:
+                new_h_cost = heuristic(problem, successor)
+                new_f_cost =  new_h_cost # f_cost = h_cost only
+                new_path = path + [action]
+                
+                heapq.heappush(frontier, (new_f_cost, counter, successor, new_path))
+                counter += 1
+    
+    return None
